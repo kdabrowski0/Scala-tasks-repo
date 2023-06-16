@@ -1,9 +1,12 @@
-package kolokwium_2_2022_wyscig
+package kolokwium2_2022_wyscig
 
-import actorzy.Organizator
 
 import akka.actor._
 import scala.concurrent.duration._
+
+//zimportuj plik z aktorami
+import aktorzy.*
+
 
 /*
   W konfiguracji projektu wykorzystana została wtyczka
@@ -25,7 +28,7 @@ def race(): Unit = {
   val system = ActorSystem("LeMans")
   import system.dispatcher
 
-  val MaxCyk = 300 // liczba „cyknięć” do wykonania (można eksperymentować)
+  val MaxCyk = 50 // liczba „cyknięć” do wykonania (można eksperymentować)
 
   // UWAGA: „nazwy”, tworzące ścieżkę do aktora muszą być zapisywane
   // z użyciem znaków ASCII (a nie np. UTF8)!

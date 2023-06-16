@@ -7,6 +7,8 @@ object Auto{
 }
 
 class Auto extends Actor{
+    import Auto._
+    import Kierowca._
     def receive: Receive = {
         case Dalej => 
             println(s"Auto ${self.path.name}: dalej")

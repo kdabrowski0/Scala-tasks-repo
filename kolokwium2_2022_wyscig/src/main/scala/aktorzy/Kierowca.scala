@@ -4,10 +4,9 @@ import akka.actor._
 
 object Kierowca {
     case object PrzygotujAuto
-    case object Cyk
+    case object CykKierowca
     case class ReakcjaAuta(ov: Option[Int])
-    case object PrzebytaDroga
-    case object KoniecWyscgiu
+    case object PodajTrasę
     case class WynikNaprawy(efekt: Option[ActorRef])
 }
 
@@ -20,12 +19,11 @@ class Kierowca(warsztat: ActorRef, dt: Int) extends Actor{
             println(s"Kierowca ${self.path.name}: przygotowuje auto")
             //utwórz aktora auto
             val auto = context.actorOf(Props[Auto](), "auto")
-            //wyslij komunikat do auta o przygotowaniu
-            auto ! Auto.Przygotuj 
+
             context.become(wyscig(auto, 0))       
     }
     def wyscig(auto: ActorRef, dystans: Float): Receive = {
-        case Cyk => 
+        case CykKierowca => 
             println(s"Kierowca ${self.path.name}: cyk")
             //wyslij komunikat do auta o cyk
             auto ! Auto.Dalej
@@ -50,12 +48,13 @@ class Kierowca(warsztat: ActorRef, dt: Int) extends Actor{
                     println(s"Kierowca ${self.path.name}: awaria")
                     //wyslij komunikat do warsztatu o awarii
                     warsztat ! Warsztat.Awaria(auto)
-                    context.becom(naprawaAuta(auto, dystans))
+                    context.become(naprawaAuta(auto, dystans))
             }
-        case PrzebytaDroga => 
-            println(s"Kierowca ${self.path.name}: przebyta droga")
+        case PodajTrasę => 
+            println(s"Kierowca ${self.path.name}: koniec wyscigu")
             //wyslij komunikat do organizatora o przejechaniu dystansu
             sender() ! Organizator.TrasaPrzejechana(dystans)
+
         }
         def naprawaAuta(auto: ActorRef, dystans: Float): Receive = {
             case WynikNaprawy(efekt) =>
@@ -69,14 +68,14 @@ class Kierowca(warsztat: ActorRef, dt: Int) extends Actor{
                     context.become(wyscig(auto, dystans))
                 }
                 
-            case KoniecWyscgiu => 
+            case PodajTrasę => 
                 println(s"Kierowca ${self.path.name}: koniec wyscigu")
                 //wyslij komunikat do organizatora o przejechaniu dystansu
                 sender() ! Organizator.TrasaPrzejechana(dystans)
         }
         def koniecWyscigu(auto: ActorRef, dystans: Float): Receive = {
-            case KoniecWyscgiu => 
-                println(s"Kierowca ${self.path.name}: przebyta droga")
+            case PodajTrasę =>
+                println(s"Kierowca ${self.path.name}: koniec wyscigu")
                 //wyslij komunikat do organizatora o przejechaniu dystansu
                 sender() ! Organizator.TrasaPrzejechana(dystans)
         }
