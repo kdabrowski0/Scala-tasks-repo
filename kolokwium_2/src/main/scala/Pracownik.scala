@@ -25,6 +25,8 @@ class Pracownik extends Actor with ActorLogging {
     case Szukaj(slowo, prevslowo) =>
       if (prevslowo.length == 1) {
         context.parent ! Ile(slowo, licznik)
+        // val szefSelection = context.actorSelection("/user/szef")
+        // szefSelection ! Ile(slowo, licznik)
       } else {
         val nazwaPracownika = prevslowo.charAt(1).toString
         val pracownik = context.child(nazwaPracownika) match {
@@ -32,9 +34,13 @@ class Pracownik extends Actor with ActorLogging {
             pracownik ! Szukaj(slowo,prevslowo.substring(1))
           case None =>
             context.parent ! Ile(slowo, 0)
+            // val szefSelection = context.actorSelection("/user/szef")
+            // szefSelection ! Ile(slowo, 0)
         }
       }
     case Ile(slowo, n) =>
       context.parent ! Ile(slowo, n)
+      // val szefSelection = context.actorSelection("/user/szef")
+      // szefSelection ! Ile(slowo, n)
   }    
 }
