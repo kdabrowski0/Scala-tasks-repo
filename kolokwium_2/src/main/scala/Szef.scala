@@ -42,6 +42,7 @@ class Szef extends Actor with ActorLogging {
       val pracownik = context.child(rslowo.charAt(0).toString) match {
         case Some(pracownik) => 
           pracownik ! Szukaj(rslowo, rslowo)
+          // pracownik ! I(rslowo) !!! SPOSÓB 3
         case None =>
           self ! Ile(rslowo, 0)
       }
