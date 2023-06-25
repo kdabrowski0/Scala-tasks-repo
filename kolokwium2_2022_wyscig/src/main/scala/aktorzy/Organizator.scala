@@ -62,7 +62,8 @@ class Organizator extends Actor {
             posortowaneWyniki.zipWithIndex.foreach { case ((kierowca, dystans), miejsce) =>
             val miejsceTekst = if (miejsce == 0) "1. miejsce" else if (miejsce == 1) "2. miejsce" else if (miejsce == 2) "3. miejsce" else s"${miejsce + 1}. miejsce"
             println(s"$miejsceTekst: ${kierowca.path.name}: $dystans km")
+            context.system.terminate()
         }
-        context.system.terminate()
+       
     }
 }

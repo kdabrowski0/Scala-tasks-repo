@@ -1,0 +1,117 @@
+Zadanie. Wykorzystujac mechanizm aktorow napisz program, który wezytuje stowa zawarte w pliku dane. txt i buduje hierarchie aktorów typu Pracownik, ktorch zadaniem jest gromadzenie informacji O liczbie wvstapien poszczedölnych slow, Które pojawily sie w danych. Calost budowanej hierarchi! nadzoruje pojedynczy aktor typu Szef. Po uruchomieniu programu powinien on
+wozytac dane z pliku dane. txt dynamicznie tworzac hierarchie prejsc do stanu, w ktory oczekuje juz jedynie na trzy rodzaje komunikatów:
+case class W(slowo: String)
+case class I(slowo: String)
+case class Ile(slowo: String, n: Int)
+z ktorych dwa pierwsze wysylane beda z poziomu programu glównego, w reakcji na polecenia uzytkownika i stuzyc beda do dodawania stów oraz zadawania pytan o liczbe wystapien danego stowa w danych reprezentowanch prez hierarchie. Trzeci - Ile (...) wysylany bedzie do Szefa prez aktorów typu Pracownik, aby ten pierwszy mogt odpowiadad na komunikaty I(... ).
+szy rysunek przedstawia przyktad hierarchii aktorow odpowiadajacej danym z fragment pliku zawierajacego 9 stów (w dwoch liniach).
+UI
+„Znakowy" interfejs uzytkownika (program glowny)
+Aktor glowny (Szef)
+- Aktor „indeksujacy" (Pracownik)
+Uwaga! Aktorzy typu Pracownik obstuguja co najmniej komunikaty postaci:
+• case class Wstaw(slow: String)
+
+(na które bezposrednio tlumacza sie tez komunikaty typu W) stuza do budowania hierarchii. Implementaje reakcji na komunikat I stuzacy do odezytywania zgromadzonych w niej danych zaproponuj samodzielnie.
+W przykladzie z rysunku - wreakcji na wiadomosc I ("ala") hierarchia (a scislej aktor oznaczony na rysunku „pokratkowana" strzalka) powinna zwrocic do Szefa komunikat Ile ("ala", 3). Po otrzymaniu takiej odpowiedzi Szef wypisuje ja na konsoli.
+W swim rozwiazaniu nie korzysta ze zmiennych. Dozwolone jest uzwanie wasnych typów komunikatów pod warunkiem, ze:
+program bedzie poprawnie reagowal na komunikaty okreslone w tresci zadania
+• wszystkie wasne komunikaty beda przekazywane jako case class lub case object.
+Komunikacja miedzy aktorami powinna odbywad sie z zachowaniem hierarchii przedstawionej na rysunku.
+
+Czyli mamy tylko 2 aktorów szefa i pracownika plus mamy main. 
+
+to jest main 
+
+package kolokwium_2
+
+/*
+  UWAGA: W sformułowaniu zadania zabrakło jednej wskazówki/informacji:
+
+    Jeśli słowo, o którego liczbę wystąpień pytamy, nie występuje w strukturze
+    hierarchii aktorów, to program powinien zwrócić dla niego (tzn. Szef powinien
+    wypisać w konsoli) wartość 0.
+
+    Przykładowo, w sytuacji zobrazowanej na rysunku, komunikaty I("al") oraz
+    I("alert") powinny zwrócić (w konsoli) odpowiedź 0.
+*/
+
+import akka.actor.{ActorSystem, Actor, ActorLogging, ActorRef, Props}
+
+// Metoda nie wymaga zmian. Wczytuje dane z pliku i zwraca listę słów
+private def dane: List[String] = {
+  import scala.io.Source
+  val plik = Source.fromFile("src/main/resources/dane.txt", "UTF-8")
+  plik
+    .getLines.toList
+    .flatMap { linia => linia.split("[^\\p{IsAlphabetic}]+").toList }
+}
+
+@main def main: Unit = {
+  val system = ActorSystem("sys")
+  val szef = system.actorOf(Props[Szef](), "szef")
+  // println(dane)
+  // wysyłamy do szefa poszczególne słowa
+
+  // dane.foreach { słowo => szef ! I(słowo) }
+  val slowaprzyk = List("ala", "abba", "essa", "ala")
+  slowaprzyk.foreach { słowo => szef ! I(słowo)}
+  slowaprzyk.foreach { słowo => szef ! W("ala")}
+
+}
+
+
+to jest szef
+package kolokwium_2
+
+import akka.actor.{Actor, ActorLogging, Props}
+
+abstract class DoSzefa
+case class W(słowo: String) extends DoSzefa
+case class I(słowo: String) extends DoSzefa
+case class Ile(słowo: String, n: Int) extends DoSzefa
+
+class Szef extends Actor with ActorLogging {
+  def receive: Receive = {
+    case I(słowo) =>
+      log.info(s"SZEF Otrzymalem wiadomosc $słowo")
+      //szef tworzy pracownika którego nazwą jest pierwsza litera słowa
+      val pracownik = context.actorOf(Props[Pracownik](), s"${słowo.charAt(0)}")
+      pracownik ! Wstaw(słowo)
+    case Ile(słowo, n) => ???
+    case W(słowo) => 
+      //ten komunikat ma zliczac ile razy to słowo wystąpiło w strukturze
+      //hierarchii aktorów
+      //szef tworzy pracownika którego nazwą jest pierwsza litera słowa
+      val pracownik = context.actorOf(Props[Pracownik](), s"${słowo.charAt(0)}")
+      pracownik ! Wstaw(słowo)
+  }
+}
+ 
+
+ i to jest pracownik 
+ package kolokwium_2
+
+import akka.actor.{Actor, ActorLogging, Props}
+
+abstract class DoPracownika
+case class Wstaw(słowo: String) extends DoPracownika
+
+class Pracownik extends Actor with ActorLogging {
+  def receive: Receive = {
+    case Wstaw(słowo) =>
+      log.info(s"PRACOWNIK Otrzymalem wiadomosc Wstaw($słowo)")
+      //pracownik po otrzymaniu wstaw tworzy nowego pracownika
+      //i przekazuje mu słowo bez pierwszej litery 
+      //nazwą tego pracownika jest pierwsza litera słowa
+      val pracownik = context.actorOf(Props[Pracownik](), s"${słowo.charAt(1)}")
+      pracownik ! Wstaw(słowo.substring(1))
+
+  }
+}
+
+czyli jak wstawiam te słowa 
+val slowaprzyk = List("ala", "abba", "essa", "ala")
+
+to szef przy ala ma zrobic pracownika "a" ktory dosatnie słowo "ala" i on stworzy pracownika "l" do ktorego przekaze dalej Wstaw("la") 
+i pracownik l przekazqe słowo "a" do ostatniego pracownika o nazwie "a" i pamietaj ze nazwy pracowników nie mogą sie pwotarzac 

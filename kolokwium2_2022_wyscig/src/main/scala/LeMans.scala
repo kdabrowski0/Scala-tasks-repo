@@ -43,3 +43,4 @@ def race(): Unit = {
     Organizator.Cyk     // komunikat
   )
 }
+
